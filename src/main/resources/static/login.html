@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<h1>🔐 Login</h1>
+
+<div class="container">
+
+    <input type="email"
+           id="email"
+           placeholder="Enter Email">
+
+    <br><br>
+
+    <input type="password"
+           id="password"
+           placeholder="Enter Password">
+
+    <br><br>
+
+    <button onclick="login()">
+
+        Login
+
+    </button>
+
+    <br><br>
+
+    New User?
+
+    <a href="/register.html">
+
+        Register
+
+    </a>
+
+</div>
+
+<script>
+
+function login() {
+
+    let email =
+        document.getElementById("email").value;
+
+    let password =
+        document.getElementById("password").value;
+
+    fetch("/auth/login", {
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+
+            email:email,
+
+            password:password
+
+        })
+
+    })
+
+    .then(response=>response.text())
+
+    .then(data=>{
+
+        alert(data);
+
+        if(data=="Login Successful"){
+
+    sessionStorage.setItem("loggedIn","true");
+
+    window.location.href="/";
+
+}
+
+    });
+
+}
+
+</script>
+<script>
+
+function toggleTheme(){
+
+    document.body.classList.toggle("light-mode");
+
+    if(document.body.classList.contains("light-mode")){
+
+        localStorage.setItem(
+
+            "theme",
+
+            "light"
+
+        );
+
+        document.getElementById("themeBtn")
+        .innerHTML =
+        "☀ Light Mode";
+
+    }
+
+    else{
+
+        localStorage.setItem(
+
+            "theme",
+
+            "dark"
+
+        );
+
+        document.getElementById("themeBtn")
+        .innerHTML =
+        "🌙 Dark Mode";
+
+    }
+
+}
+
+
+
+window.onload = function(){
+
+    if(localStorage.getItem("theme")=="light"){
+
+        document.body.classList.add(
+
+            "light-mode"
+
+        );
+
+        document.getElementById("themeBtn")
+        .innerHTML =
+        "☀ Light Mode";
+
+    }
+
+}
+
+</script>
+</body>
+</html>

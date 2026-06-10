@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transactions</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <script>
+
+if(sessionStorage.getItem("loggedIn") != "true"){
+
+    window.location.href="/login.html";
+
+}
+
+</script>
+<nav class="navbar">
+
+    <a href="/">🏠 Home</a>
+
+    <a href="/userspage">👤 Users</a>
+
+    <a href="/expensespage">💰 Expenses</a>
+
+    <a href="/transactionspage">📜 Transactions</a>
+
+    <a href="/dashboardpage">📊 Dashboard</a>
+
+    <a href="/balancepage">⚖ Balance</a>
+
+    <a href="#" onclick="logout()">🚪 Logout</a>
+
+    <button onclick="toggleTheme()" id="themeBtn">
+    🌙 Dark Mode
+</button>
+
+</nav>
+
+<br>
+<h1>📜 Transactions</h1>
+<div class="container">
+<ul id="transactionList"></ul>
+</div>
+<script>
+
+fetch("/transactions/1")
+.then(response => response.json())
+.then(transactions => {
+
+    let list = document.getElementById("transactionList");
+
+    transactions.forEach(transaction => {
+
+        list.innerHTML += `
+        <li>
+            ₹${transaction.amount}
+            paid by ${transaction.payer}
+            <br>
+            Participants: ${transaction.participants}
+            <br><br>
+        </li>
+        `;
+
+    });
+
+});
+
+function logout(){
+
+    sessionStorage.removeItem("loggedIn");
+
+    window.location.href="/login.html";
+
+}
+
+function showToast(message){
+
+    let toast = document.getElementById("toast");
+
+    toast.innerHTML = message;
+
+    toast.classList.add("show");
+
+    setTimeout(() => {
+
+        toast.classList.remove("show");
+
+    },3000);
+
+}
+</script>
+<div id="toast"></div>
+<script>
+
+function toggleTheme(){
+
+    document.body.classList.toggle("light-mode");
+
+    if(document.body.classList.contains("light-mode")){
+
+        localStorage.setItem(
+
+            "theme",
+
+            "light"
+
+        );
+
+        document.getElementById("themeBtn")
+        .innerHTML =
+        "☀ Light Mode";
+
+    }
+
+    else{
+
+        localStorage.setItem(
+
+            "theme",
+
+            "dark"
+
+        );
+
+        document.getElementById("themeBtn")
+        .innerHTML =
+        "🌙 Dark Mode";
+
+    }
+
+}
+
+
+
+window.onload = function(){
+
+    if(localStorage.getItem("theme")=="light"){
+
+        document.body.classList.add(
+
+            "light-mode"
+
+        );
+
+        document.getElementById("themeBtn")
+        .innerHTML =
+        "☀ Light Mode";
+
+    }
+
+}
+
+</script>
+</body>
+</html>

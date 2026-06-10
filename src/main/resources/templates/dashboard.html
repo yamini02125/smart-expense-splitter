@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<script>
+
+if(sessionStorage.getItem("loggedIn") != "true"){
+
+    window.location.href="/login.html";
+
+}
+
+</script>
+<nav class="navbar">
+
+    <a href="/">🏠 Home</a>
+
+    <a href="/userspage">👤 Users</a>
+
+    <a href="/expensespage">💰 Expenses</a>
+
+    <a href="/transactionspage">📜 Transactions</a>
+
+    <a href="/dashboardpage">📊 Dashboard</a>
+
+    <a href="/balancepage">⚖ Balance</a>
+
+    <a href="#" onclick="logout()">🚪 Logout</a>
+
+    <button onclick="toggleTheme()" id="themeBtn">
+    🌙 Dark Mode
+</button>
+
+</nav>
+
+<h1>📊 Dashboard</h1>
+<div class="container">
+<div class="dashboard-box">
+
+    
+    <h2 class="section-title">📌 Overview</h2>
+
+<div class="dashboard-box">
+
+    <div class="dash-card">
+
+        <h2>👤 Total Users</h2>
+
+        <h1 id="totalUsers">0</h1>
+
+    </div>
+
+    <div class="dash-card">
+
+        <h2>💰 Total Expenses</h2>
+
+        <h1 id="totalExpenses">0</h1>
+
+    </div>
+
+    <div class="dash-card">
+
+        <h2>₹ Total Amount</h2>
+
+        <h1 id="totalAmount">0</h1>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= SUMMARY ================= -->
+
+<h2 class="section-title">📊 Summary</h2>
+
+<div class="dashboard-box">
+
+    <div class="dash-card">
+
+        <h2>🏆 Highest Spender</h2>
+
+        <h1 id="highestUser">-</h1>
+
+        <p id="highestAmount">₹0</p>
+
+    </div>
+
+    <div class="dash-card">
+
+        <h2>💸 Lowest Spender</h2>
+
+        <h1 id="lowestUser">-</h1>
+
+        <p id="lowestAmount">₹0</p>
+
+    </div>
+
+    <div class="dash-card">
+
+        <h2>📅 Monthly Summary</h2>
+
+        <div id="monthlySummary">
+
+            Loading...
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= ANALYTICS ================= -->
+
+<h2 class="section-title">📈 Analytics</h2>
+
+<div class="dashboard-box">
+
+    <div class="dash-card chart-card">
+
+        <h2>🥧 Expense Distribution</h2>
+
+        <canvas id="pieChart"></canvas>
+
+    </div>
+
+    <div class="dash-card chart-card">
+
+        <h2>📊 Expenses by User</h2>
+
+        <canvas id="barChart"></canvas>
+
+    </div>
+
+    <div class="dash-card chart-card">
+
+        <h2>📈 Expense Trend</h2>
+
+        <canvas id="lineChart"></canvas>
+
+    </div>
+
+    <div class="dash-card">
+
+    <h2>📂 Category Breakdown</h2>
+
+    <canvas id="categoryChart"></canvas>
+
+</div>
+
+</div>
+
+
+
+<!-- ================= INSIGHTS ================= -->
+
+<h2 class="section-title">📌 Insights</h2>
+
+<div class="dashboard-box">
+
+    <div class="dash-card">
+
+        <h2>🏆 Top Spenders</h2>
+
+        <div id="leaderboard">
+
+            Loading...
+
+        </div>
+
+    </div>
+
+    <div class="dash-card">
+
+        <h2>🕒 Recent Activity</h2>
+
+        <div id="recentActivity">
+
+            Loading...
+
+        </div>
+
+    </div>
+
+    <div class="dash-card">
+
+    <h2>📂 Category Summary</h2>
+
+    <div id="categorySummary">
+
+        Loading...
+
+    </div>
+
+</div>
+
+</div>
+
+<script>
+
+fetch("/users")
+.then(response => response.json())
+.then(users => {
+
+    document.getElementById("totalUsers").innerText = users.length;
+
+});
+
+fetch("/expenses")
+.then(response => response.json())
+.then(expenses => {
+
+    document.getElementById("totalExpenses").innerText = expenses.length;
+
+    let total = 0;
+
+    expenses.forEach(expense => {
+
+        total += expense.amount;
+
+    });
+
+    document.getElementById("totalAmount").innerText = total;
+
+});
+function logout(){
+
+    sessionStorage.removeItem("loggedIn");
+
+    window.location.href="/login.html";
+
+}
+
+fetch("/expenses")
+.then(response => response.json())
+.then(expenses => {
+
+    let userTotals = {};
+
+    expenses.forEach(expense => {
+
+        let user = expense.paidBy.name;
+
+        if(userTotals[user]){
+
+            userTotals[user] += expense.amount;
+
+        }
+        else{
+
+            userTotals[user] = expense.amount;
+
+        }
+
+    });
+
+    // PIE CHART
+
+    new Chart(document.getElementById("pieChart"), {
+
+        type: "pie",
+
+        data: {
+
+            labels: Object.keys(userTotals),
+
+            datasets: [{
+
+                data: Object.values(userTotals)
+
+            }]
+
+        }
+
+    });
+
+
+    // BAR CHART
+
+    new Chart(document.getElementById("barChart"), {
+
+        type: "bar",
+
+        data: {
+
+            labels: Object.keys(userTotals),
+
+            datasets: [{
+
+                label: "Amount Spent",
+
+                data: Object.values(userTotals)
+
+            }]
+
+        },
+
+        options: {
+
+            scales: {
+
+                y: {
+
+                    beginAtZero: true
+
+                }
+
+            }
+
+        }
+
+    });
+
+});
+
+function showToast(message){
+
+    let toast = document.getElementById("toast");
+
+    toast.innerHTML = message;
+
+    toast.classList.add("show");
+
+    setTimeout(() => {
+
+        toast.classList.remove("show");
+
+    },3000);
+
+}
+
+fetch("/expenses")
+.then(response => response.json())
+.then(expenses => {
+
+    let totals = {};
+
+    expenses.forEach(expense => {
+
+        let name = expense.paidBy.name;
+
+        if(totals[name]){
+
+            totals[name] += expense.amount;
+
+        }
+        else{
+
+            totals[name] = expense.amount;
+
+        }
+
+    });
+
+    let highestUser = "";
+    let highestAmount = 0;
+
+    let lowestUser = "";
+    let lowestAmount = Number.MAX_VALUE;
+
+
+    for(let user in totals){
+
+        if(totals[user] > highestAmount){
+
+            highestAmount = totals[user];
+
+            highestUser = user;
+
+        }
+
+        if(totals[user] < lowestAmount){
+
+            lowestAmount = totals[user];
+
+            lowestUser = user;
+
+        }
+
+    }
+
+
+    document.getElementById("highestUser").innerHTML =
+        highestUser;
+
+    document.getElementById("highestAmount").innerHTML =
+        "₹" + highestAmount;
+
+
+    document.getElementById("lowestUser").innerHTML =
+        lowestUser;
+
+    document.getElementById("lowestAmount").innerHTML =
+        "₹" + lowestAmount;
+
+});
+
+fetch("/expenses")
+.then(response => response.json())
+.then(expenses => {
+
+    let monthlyTotals = {};
+
+    expenses.forEach(expense => {
+
+        let date = new Date(expense.createdAt);
+
+        let monthYear =
+            date.toLocaleString(
+                "en-IN",
+                {
+                    month: "short",
+                    year: "numeric"
+                }
+            );
+
+        if(monthlyTotals[monthYear]){
+
+            monthlyTotals[monthYear] += expense.amount;
+
+        }
+        else{
+
+            monthlyTotals[monthYear] = expense.amount;
+
+        }
+
+    });
+
+    let html = "";
+
+    for(let month in monthlyTotals){
+
+        html +=
+        `
+        <p>
+
+            ${month}
+
+            <br>
+
+            ₹${monthlyTotals[month]}
+
+        </p>
+
+        <br>
+        `;
+    }
+
+    document.getElementById("monthlySummary")
+            .innerHTML = html;
+
+});
+
+fetch("/expenses")
+.then(response => response.json())
+.then(expenses => {
+
+    let totals = {};
+
+    expenses.forEach(expense => {
+
+        let user = expense.paidBy.name;
+
+        if(totals[user]){
+
+            totals[user] += expense.amount;
+
+        }
+        else{
+
+            totals[user] = expense.amount;
+
+        }
+
+    });
+
+    let leaderboard = [];
+
+    for(let user in totals){
+
+        leaderboard.push({
+
+            name: user,
+
+            amount: totals[user]
+
+        });
+
+    }
+
+    leaderboard.sort((a,b) => b.amount - a.amount);
+
+    let medals = ["🥇","🥈","🥉"];
+
+    let html = "";
+
+    for(let i=0; i<3 && i<leaderboard.length; i++){
+
+        html +=
+        `
+        <p>
+
+            ${medals[i]}
+
+            ${leaderboard[i].name}
+
+            <br>
+
+            ₹${leaderboard[i].amount}
+
+        </p>
+
+        <br>
+        `;
+    }
+
+    document.getElementById("leaderboard").innerHTML = html;
+
+});
+
+
+fetch("/expenses")
+.then(response => response.json())
+.then(expenses => {
+
+
+let monthlyTotals = {};
+
+expenses.forEach(expense => {
+
+    let date = new Date(expense.createdAt);
+
+    let month =
+        date.toLocaleString(
+            "en-IN",
+            {
+                month: "short",
+                year: "numeric"
+            });
+
+    if(monthlyTotals[month]){
+
+        monthlyTotals[month] += expense.amount;
+
+    }
+    else{
+
+        monthlyTotals[month] = expense.amount;
+
+    }
+
+});
+
+new Chart(document.getElementById("lineChart"), {
+
+    type: "line",
+
+    data: {
+
+        labels: Object.keys(monthlyTotals),
+
+        datasets: [{
+
+            label: "Expense Amount",
+
+            data: Object.values(monthlyTotals),
+
+            fill: false,
+
+            tension: 0.4
+
+        }]
+
+    },
+
+    options: {
+
+        responsive: true
+
+    }
+
+});
+
+
+});
+
+fetch("/expenses")
+.then(response => response.json())
+.then(expenses => {
+
+expenses.sort((a,b)=>
+    new Date(b.createdAt)-new Date(a.createdAt));
+
+let html = "";
+
+expenses.slice(0,5).forEach(expense=>{
+
+    let date =
+        new Date(expense.createdAt)
+        .toLocaleString(
+            "en-IN",
+            {
+                day:"2-digit",
+                month:"short",
+                hour:"2-digit",
+                minute:"2-digit"
+            });
+
+    html +=
+    `
+    <p>
+
+        ${expense.paidBy.name}
+        added ₹${expense.amount}
+
+        <br>
+
+        <small>
+
+            ${date}
+
+        </small>
+
+    </p>
+
+    <br>
+    `;
+});
+
+document.getElementById("recentActivity")
+        .innerHTML = html;
+
+});
+
+</script>
+<div id="toast"></div>
+<script>
+
+function toggleTheme(){
+
+    document.body.classList.toggle("light-mode");
+
+    if(document.body.classList.contains("light-mode")){
+
+        localStorage.setItem(
+
+            "theme",
+
+            "light"
+
+        );
+
+        document.getElementById("themeBtn")
+        .innerHTML =
+        "☀ Light Mode";
+
+    }
+
+    else{
+
+        localStorage.setItem(
+
+            "theme",
+
+            "dark"
+
+        );
+
+        document.getElementById("themeBtn")
+        .innerHTML =
+        "🌙 Dark Mode";
+
+    }
+
+}
+
+
+
+window.onload = function(){
+
+    if(localStorage.getItem("theme")=="light"){
+
+        document.body.classList.add(
+
+            "light-mode"
+
+        );
+
+        document.getElementById("themeBtn")
+        .innerHTML =
+        "☀ Light Mode";
+
+    }
+
+}
+
+fetch("/expenses")
+.then(response => response.json())
+.then(expenses => {
+
+    let categoryTotals = {};
+
+    expenses.forEach(expense => {
+
+        let category = expense.category;
+
+        if(categoryTotals[category]){
+
+            categoryTotals[category] += expense.amount;
+
+        }
+        else{
+
+            categoryTotals[category] = expense.amount;
+
+        }
+
+    });
+
+    new Chart(document.getElementById("categoryChart"), {
+
+        type: "pie",
+
+        data: {
+
+            labels: Object.keys(categoryTotals),
+
+            datasets: [{
+
+                data: Object.values(categoryTotals)
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            plugins: {
+
+                legend: {
+
+                    position: "bottom"
+
+                }
+
+            }
+
+        }
+
+    });
+
+});
+
+fetch("/expenses")
+.then(response => response.json())
+.then(expenses => {
+
+    let categoryTotals = {};
+
+    expenses.forEach(expense => {
+
+        let category = expense.category;
+
+        if(categoryTotals[category]){
+
+            categoryTotals[category] += expense.amount;
+
+        }
+        else{
+
+            categoryTotals[category] = expense.amount;
+
+        }
+
+    });
+
+    let html = "";
+
+    for(let category in categoryTotals){
+
+        let emoji = "📂";
+
+        if(category == "Food")
+            emoji = "🍔";
+
+        else if(category == "Travel")
+            emoji = "✈";
+
+        else if(category == "Shopping")
+            emoji = "🛍";
+
+        else if(category == "Entertainment")
+            emoji = "🎬";
+
+        else if(category == "Bills")
+            emoji = "💡";
+
+        html +=
+        `
+        <p>
+
+            ${emoji}
+
+            ${category}
+
+            <br>
+
+            ₹${categoryTotals[category]}
+
+        </p>
+
+        <br>
+        `;
+    }
+
+    document.getElementById("categorySummary")
+            .innerHTML = html;
+
+});
+</script>
+</body>
+</html>
